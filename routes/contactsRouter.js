@@ -6,6 +6,7 @@ import validateBody from "../helpers/validateBody.js";
 import {
   createContactSchema,
   updateContactSchema,
+  updateFavoriteSchema,
 } from "../schemas/contactsSchemas.js";
 
 const contactsRouter = express.Router();
@@ -26,6 +27,12 @@ contactsRouter.put(
   "/:id",
   validateBody(updateContactSchema),
   contactsController.updateContact
+);
+
+contactsRouter.patch(
+  "/:id/favorite",
+  validateBody(updateFavoriteSchema),
+  contactsController.updateFavorite
 );
 
 export default contactsRouter;

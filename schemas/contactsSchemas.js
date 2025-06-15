@@ -20,3 +20,7 @@ export const updateContactSchema = Joi.object({
       "string.pattern.base": "Phone format is invalid",
     }),
 });
+
+export const updateFavoriteSchema = Joi.object({
+  favorite: Joi.boolean(),
+});
