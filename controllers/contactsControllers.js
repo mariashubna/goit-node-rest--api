@@ -1,6 +1,6 @@
 import {
   listContacts,
-  getContactById,
+  getContact,
   removeContact,
   addContact,
   changeContact,
@@ -10,24 +10,37 @@ import {
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 
-const getAllContacts = async (_, res, next) => {
-  const contacts = await listContacts();
+const getAllContacts = async (req, res, next) => {
+  const { id } = req.user;
+
+  const { page = 1, limit = 20, favorite } = req.query;
+
+  const skip = (page - 1) * limit;
+  const filters = { owner: id };
+
+  if (favorite !== undefined) {
+    filters.favorite = favorite === "true";
+  }
+
+  const contacts = await listContacts(filters, { offset: skip, limit: +limit });
   res.status(200).json(contacts);
 };
 
 const getOneContact = async (req, res, next) => {
+  const { id: owner } = req.user;
   const id = req.params.id;
-  const contactById = await getContactById(id);
-  if (!contactById) {
+  const contact = await getContact({ id, owner });
+  if (!contact) {
     throw HttpError(404, "Not found");
   }
 
-  res.status(200).json(contactById);
+  res.status(200).json(contact);
 };
 
 const deleteContact = async (req, res, next) => {
+  const { id: owner } = req.user;
   const id = req.params.id;
-  const deletedContact = await removeContact(id);
+  const deletedContact = await removeContact({ id, owner });
   if (!deletedContact) {
     throw HttpError(404, "Not found");
   }
@@ -36,17 +49,22 @@ const deleteContact = async (req, res, next) => {
 };
 
 const createContact = async (req, res, next) => {
+  const { id } = req.user;
   const { name, email, phone } = req.body;
-  const newContact = await addContact(name, email, phone);
+  const newContact = await addContact({ name, email, phone, owner: id });
   res.status(201).json(newContact);
 };
 
 const updateContact = async (req, res, next) => {
+  const { id: owner } = req.user;
   const { id } = req.params;
   const { name, email, phone } = req.body;
   if (Object.keys(req.body).length === 0)
     throw HttpError(400, "Body must have at least one field");
-  const updatedContact = await changeContact(id, { name, email, phone });
+  const updatedContact = await changeContact(
+    { id, owner },
+    { name, email, phone }
+  );
 
   if (!updatedContact) {
     throw HttpError(404, "Not found");
@@ -56,11 +74,12 @@ const updateContact = async (req, res, next) => {
 };
 
 const updateFavorite = async (req, res, next) => {
+  const { id: owner } = req.user;
   const { id } = req.params;
   const { favorite } = req.body;
   if (Object.keys(req.body).length === 0)
     throw HttpError(400, "Body must have at least field 'favorite'");
-  const updatedFavorite = await changeFavorite(id, { favorite });
+  const updatedFavorite = await changeFavorite({ id, owner }, { favorite });
 
   if (!updatedFavorite) {
     throw HttpError(404, "Not found");

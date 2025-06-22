@@ -1,44 +1,53 @@
 import Contact from "../db/contacts.js";
 
-async function listContacts() {
-  const contactsList = await Contact.findAll();
-  return contactsList;
+async function listContacts(filters, options = {}) {
+  const { count, rows } = await Contact.findAndCountAll({
+    where: filters,
+    offset: options.offset || 0,
+    limit: options.limit || 20,
+  });
+
+  return {
+    total: count,
+    onPage: rows.length,
+    contacts: rows,
+  };
 }
 
-async function getContactById(id) {
-  const contact = await Contact.findByPk(id);
+async function getContact({ id, owner }) {
+  const contact = await Contact.findOne({ where: { id, owner } });
   return contact || null;
 }
 
-async function removeContact(id) {
-  const contact = await getContactById(id);
+async function removeContact(query) {
+  const contact = await getContact(query);
   if (!contact) return null;
-  contact.destroy();
+  await contact.destroy();
   return contact;
 }
 
-async function addContact(name, email, phone) {
-  const newContact = await Contact.create({ name, email, phone });
+async function addContact({ name, email, phone, owner }) {
+  const newContact = await Contact.create({ name, email, phone, owner });
   return newContact;
 }
 
-async function changeContact(id, updateData) {
-  const contact = await getContactById(id);
+async function changeContact(query, updateData) {
+  const contact = await getContact(query);
   if (!contact) return null;
-  contact.update(updateData);
+  await contact.update(updateData);
   return contact;
 }
 
-async function changeFavorite(id, updateData) {
-  const contact = await getContactById(id);
+async function changeFavorite(query, updateData) {
+  const contact = await getContact(query);
   if (!contact) return null;
-  contact.update(updateData);
+  await contact.update(updateData);
   return contact;
 }
 
 export {
   listContacts,
-  getContactById,
+  getContact,
   removeContact,
   addContact,
   changeContact,

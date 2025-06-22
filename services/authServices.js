@@ -1,9 +1,8 @@
 import User from "../db/users.js";
 import bcrypt from "bcrypt";
 import HttpError from "../helpers/HttpError.js";
-import jwt from "jsonwebtoken";
-
-const { JWT_SECRET } = process.env;
+import { listContacts } from "../services/contactsServices.js";
+import { createToken } from "../helpers/jwt.js";
 
 export const findUser = (query) =>
   User.findOne({
@@ -28,7 +27,27 @@ export const loginUser = async ({ email, password }) => {
   const payload = {
     id: user.id,
   };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
+  const token = createToken(payload);
+  user.token = token;
+  await user.save();
+  const contacts = await listContacts({ owner: user.id });
 
-  return token;
+  return { token, contacts };
+};
+
+export const logoutUser = async ({ email }) => {
+  const user = await findUser({ email });
+  if (!user) throw HttpError(401, "Not authorized");
+  user.token = "";
+  await user.save();
+};
+
+export const changeSubscription = async (userId, subscription) => {
+  const user = await findUser({ id: userId });
+  if (!user) throw HttpError(404, "User not found");
+
+  user.subscription = subscription;
+  await user.save();
+
+  return user;
 };
