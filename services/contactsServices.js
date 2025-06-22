@@ -9,7 +9,6 @@ async function listContacts(filters, options = {}) {
 
   return {
     total: count,
-    onPage: rows.length,
     contacts: rows,
   };
 }

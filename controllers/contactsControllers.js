@@ -22,8 +22,27 @@ const getAllContacts = async (req, res, next) => {
     filters.favorite = favorite === "true";
   }
 
-  const contacts = await listContacts(filters, { offset: skip, limit: +limit });
-  res.status(200).json(contacts);
+  const { total, contacts } = await listContacts(filters, {
+    offset: skip,
+    limit: +limit,
+  });
+
+  const totalPages = Math.ceil(total / limit);
+
+  if (page > totalPages && totalPages !== 0) {
+    throw HttpError(
+      400,
+      `Page ${page} does not exist. Total pages: ${totalPages}`
+    );
+  }
+
+  res.status(200).json({
+    total,
+    totalPages,
+    page: +page,
+    limit: +limit,
+    contacts,
+  });
 };
 
 const getOneContact = async (req, res, next) => {
