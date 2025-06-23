@@ -1,7 +1,6 @@
 import User from "../db/users.js";
 import bcrypt from "bcrypt";
 import HttpError from "../helpers/HttpError.js";
-import { listContacts } from "../services/contactsServices.js";
 import { createToken } from "../helpers/jwt.js";
 
 export const findUser = (query) =>
@@ -30,9 +29,14 @@ export const loginUser = async ({ email, password }) => {
   const token = createToken(payload);
   user.token = token;
   await user.save();
-  const contacts = await listContacts({ owner: user.id });
 
-  return { token, contacts };
+  return {
+    token,
+    user: {
+      email: user.email,
+      subscription: user.subscription,
+    },
+  };
 };
 
 export const logoutUser = async ({ email }) => {

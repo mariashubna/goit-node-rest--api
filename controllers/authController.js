@@ -23,8 +23,8 @@ const registerController = async (req, res, next) => {
   }
 };
 const loginController = async (req, res, next) => {
-  const token = await loginUser(req.body);
-  res.json({ token });
+  const { token, user } = await loginUser(req.body);
+  res.json({ token, user });
 };
 
 const getCurrentController = async (req, res, next) => {
