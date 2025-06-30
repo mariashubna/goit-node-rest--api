@@ -5,7 +5,13 @@ import {
   loginUser,
   logoutUser,
   changeSubscription,
+  changeAvatar,
 } from "../services/authServices.js";
+
+import { rename } from "node:fs/promises";
+import { resolve, join } from "node:path";
+
+const avatarDir = resolve("public", "avatars");
 
 const registerController = async (req, res, next) => {
   try {
@@ -52,10 +58,27 @@ const subscriptionController = async (req, res, next) => {
   });
 };
 
+const avatarsController = async (req, res, next) => {
+  let avatar = null;
+  const { id } = req.user;
+  if (req.file) {
+    const { path: oldPath, filename } = req.file;
+    const newPath = join(avatarDir, filename);
+    await rename(oldPath, newPath);
+    avatar = join("public", "avatars", filename);
+    const changedAvatar = changeAvatar(id, avatar);
+  }
+  const { avatarURL } = req.user;
+  res.json({
+    avatarURL,
+  });
+};
+
 export default {
   registerController: ctrlWrapper(registerController),
   loginController: ctrlWrapper(loginController),
   getCurrentController: ctrlWrapper(getCurrentController),
   logoutController: ctrlWrapper(logoutController),
   subscriptionController: ctrlWrapper(subscriptionController),
+  avatarsController: ctrlWrapper(avatarsController),
 };
