@@ -20,6 +20,7 @@ const registerController = async (req, res, next) => {
     res.status(201).json({
       email: newUser.email,
       subscription: newUser.subscription,
+      avatarURL: newUser.avatarURL,
     });
   } catch (err) {
     if (err.name === "SequelizeUniqueConstraintError") {
@@ -34,8 +35,8 @@ const loginController = async (req, res, next) => {
 };
 
 const getCurrentController = async (req, res, next) => {
-  const { email, subscription } = req.user;
-  res.json({ email, subscription });
+  const { email, subscription, avatarURL } = req.user;
+  res.json({ email, subscription, avatarURL });
 };
 
 const logoutController = async (req, res, next) => {
@@ -66,12 +67,11 @@ const avatarsController = async (req, res, next) => {
     const newPath = join(avatarDir, filename);
     await rename(oldPath, newPath);
     avatar = join("public", "avatars", filename);
-    const changedAvatar = changeAvatar(id, avatar);
+    const changedAvatar = await changeAvatar(id, avatar);
+    return res.json({
+      avatarURL: changedAvatar.avatarURL,
+    });
   }
-  const { avatarURL } = req.user;
-  res.json({
-    avatarURL,
-  });
 };
 
 export default {
