@@ -6,6 +6,8 @@ import {
   logoutUser,
   changeSubscription,
   changeAvatar,
+  verifyUser,
+  resendVerifyUser,
 } from "../services/authServices.js";
 
 import { rename } from "node:fs/promises";
@@ -74,6 +76,27 @@ const avatarsController = async (req, res, next) => {
   }
 };
 
+const verifyUserEmail = ctrlWrapper(async (req, res) => {
+  const { verificationToken } = req.params;
+
+  await verifyUser(verificationToken);
+
+  res.status(200).json({ message: "Verification successful" });
+});
+
+const resendVerificationEmail = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw HttpError(400, "required field email");
+  }
+
+  await resendVerifyUser(email);
+  res.json({
+    message: "Verification email sent",
+  });
+};
+
 export default {
   registerController: ctrlWrapper(registerController),
   loginController: ctrlWrapper(loginController),
@@ -81,4 +104,6 @@ export default {
   logoutController: ctrlWrapper(logoutController),
   subscriptionController: ctrlWrapper(subscriptionController),
   avatarsController: ctrlWrapper(avatarsController),
+  verifyUserEmail: ctrlWrapper(verifyUserEmail),
+  resendVerificationEmail: ctrlWrapper(resendVerificationEmail),
 };

@@ -29,6 +29,14 @@ const User = sequelize.define("user", {
     defaultValue: null,
   },
   avatarURL: { type: DataTypes.STRING, allowNull: false },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  verificationToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 });
 
 User.sync({ alter: true });
