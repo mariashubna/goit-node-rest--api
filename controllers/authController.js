@@ -88,7 +88,7 @@ const resendVerificationEmail = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    throw HttpError(400, "required field email");
+    throw HttpError(400, "Missing required field email");
   }
 
   await resendVerifyUser(email);

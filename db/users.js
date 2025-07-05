@@ -29,7 +29,7 @@ const User = sequelize.define("user", {
     defaultValue: null,
   },
   avatarURL: { type: DataTypes.STRING, allowNull: false },
-  isVerified: {
+  verify: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },

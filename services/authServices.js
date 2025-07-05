@@ -8,6 +8,14 @@ import sendEmail from "../helpers/sendEmail.js";
 
 const { BASE_URL } = process.env;
 
+const createVerifyEmail = (email, verificationToken) => {
+  return {
+    to: email,
+    subject: "Verify email",
+    html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${verificationToken}">Click verify email</a>`,
+  };
+};
+
 export const findUser = (query) =>
   User.findOne({
     where: query,
@@ -18,11 +26,7 @@ export const registerUser = async (payload) => {
   const verificationToken = nanoid();
   const avatarURL = gravatar.url(payload.email);
   const { email } = payload;
-  const verifyEmail = {
-    to: email,
-    subject: "Verify email",
-    html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${verificationToken}">Click verify email</a>`,
-  };
+  const verifyEmail = createVerifyEmail(email, verificationToken);
 
   await sendEmail(verifyEmail);
   return User.create({
@@ -35,20 +39,20 @@ export const registerUser = async (payload) => {
 
 export const verifyUser = async (verificationToken) => {
   const user = await findUser({ verificationToken });
-  if (!user) throw HttpError(401, "Email not found or already verified");
+  if (!user) throw HttpError(404, "User not found");
 
   return user.update({ verify: true, verificationToken: null });
 };
 
 export const resendVerifyUser = async (email) => {
   const user = await findUser({ email });
-  if (!user || user.verify)
-    throw HttpError(401, "Email not found or already verified");
+  if (!user) throw HttpError(404, "User not found");
 
-  const verifyEmail = createVerifyEmail({
-    email,
-    verificationToken: user.verificationToken,
-  });
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  const verifyEmail = createVerifyEmail(email, user.verificationToken);
 
   await sendEmail(verifyEmail);
 };
